@@ -16,6 +16,20 @@ import com.mocharealm.accompanist.lyrics.ui.utils.isPunctuation
 import com.mocharealm.accompanist.lyrics.ui.utils.isPureCjk
 import kotlin.math.pow
 
+/**
+ * Represents the raw layout result from the native text engine (Rust).
+ * Contains positioning and sizing information for a block of text.
+ *
+ * @param glyph_count Number of glyphs in this result.
+ * @param glyph_ids List of glyph IDs (indices in the font).
+ * @param positions List of positions (x, y) relative to the baseline.
+ * @param atlas_rects List of atlas coordinates (x, y, w, h) for each glyph.
+ * @param glyph_offsets List of bearing offsets (x, y) from glyph origin.
+ * @param total_width Total width of the text block.
+ * @param total_height Total height (bounding box height).
+ * @param ascent Font ascent (distance from baseline to top).
+ * @param descent Font descent (distance from baseline to bottom).
+ */
 @Stable
 data class NativeLayoutResult(
     val glyph_count: Int,
@@ -97,6 +111,24 @@ fun parseRustResult(json: String): NativeLayoutResult {
         return NativeLayoutResult(0, emptyList(), emptyList(), emptyList(), emptyList(), 0f, 0f, 0f, 0f)
     }
 }
+/**
+ * Represents the layout information for a single karaoke syllable.
+ * This includes the text layout from the native engine, as well as animation metadata.
+ *
+ * @param syllable The original karaoke syllable data.
+ * @param layoutResult The native text layout result for this syllable.
+ * @param wordId ID grouping syllables into words (for word-level wrapping).
+ * @param useAwesomeAnimation Whether this syllable uses complex per-character animations (bounce, swell).
+ * @param width Total width of the syllable.
+ * @param position Layout position relative to the line/row.
+ * @param wordPivot Pivot point for word-level transformations.
+ * @param wordAnimInfo Metadata for word-level animations.
+ * @param charOffsetInWord Constant offset of this syllable's characters within the word.
+ * @param charLayouts Individual character layouts (for complex animations).
+ * @param charOriginalBounds Bounds of individual characters relative to the syllable.
+ * @param firstBaseline Baseline offset from the top.
+ * @param floatEndingTime Calculated time when the "float" animation should settle.
+ */
 @Stable
 data class SyllableLayout(
     val syllable: KaraokeSyllable,
@@ -150,6 +182,26 @@ fun groupIntoWords(syllables: List<KaraokeSyllable>): List<List<KaraokeSyllable>
     return words
 }
 
+/**
+ * Measures all syllables in a line using the native text engine and determines
+ * appropriate animation strategies (simple fade/slide vs. complex bounce/swell).
+ *
+ * It calculates:
+ * - Text layout for each syllable
+ * - Whether "Awesome" (complex) animation should be used based on duration and language.
+ * - Animation timing constraints.
+ *
+ * @param syllables List of syllables to measure.
+ * @param textMeasurer Helper for measuring constraint spaces (space char).
+ * @param style Text style to use.
+ * @param isAccompanimentLine Whether this is a backing vocal line.
+ * @param spaceWidth Pre-measured width of a space character.
+ * @param fontFamilyResolver Resolver for fonts.
+ * @param density Screen density.
+ * @param nativeEngine The native text engine for layout.
+ * @param platformContext Platform context for font loading.
+ * @return List of [SyllableLayout] with measurement and animation data.
+ */
 fun measureSyllablesAndDetermineAnimation(
     syllables: List<KaraokeSyllable>,
     textMeasurer: TextMeasurer,
@@ -364,6 +416,20 @@ fun calculateGreedyWrappedLines(
     return lines
 }
 
+/**
+ * Calculates line wrapping for syllables using a balanced (minimum raggedness) algorithm
+ * (Knuth-Plass inspired dynamic programming approach).
+ *
+ * Tries to distribute words evenly across lines to minimize empty space at the end of lines.
+ * Falls back to greedy wrapping if optimization fails to find a valid solution.
+ *
+ * @param syllableLayouts List of pre-measured syllable layouts.
+ * @param availableWidthPx Maximum width available for a line.
+ * @param nativeEngine Native engine (used for trimming/re-measuring if needed).
+ * @param style Text style.
+ * @param density Screen density.
+ * @return List of [WrappedLine] representing the broken lines.
+ */
 fun calculateBalancedLines(
     syllableLayouts: List<SyllableLayout>,
     availableWidthPx: Float,
@@ -418,7 +484,15 @@ fun calculateBalancedLines(
 }
 
 /**
- * 修复版：移除 Alignment 依赖，使用布尔值控制布局起始点，解决 RTL 居中问题
+ * Calculates the final static layout positions for all syllables in the wrapped lines.
+ * Handles alignment (Left/Right/RTL), row positioning, and relative offsets within the line.
+ *
+ * @param wrappedLines The lines after wrapping calculation.
+ * @param isLineRightAligned Whether the entire block should be right-aligned.
+ * @param canvasWidth Total width of the canvas.
+ * @param lineHeight Height of a single line.
+ * @param isRtl Whether the visual flow is RTL.
+ * @return List of lists of [SyllableLayout], where each inner list is a row, with updated positions.
  */
 fun calculateStaticLineLayout(
     wrappedLines: List<WrappedLine>,

@@ -54,6 +54,14 @@ import com.mocharealm.accompanist.lyrics.ui.utils.isRtl
 import org.jetbrains.compose.resources.FontResource
 import kotlin.math.roundToInt
 
+/**
+ * Creates a horizontal gradient brush that represents the karaoke progress.
+ * The gradient moves from inactive color to active color based on the current time.
+ *
+ * @param lineLayout The layout information for syllables in the line.
+ * @param currentTimeMs The current playback time in milliseconds.
+ * @param isRtl Whether the layout direction is Right-to-Left.
+ */
 private fun createLineGradientBrush(
     lineLayout: List<SyllableLayout>,
     currentTimeMs: Int,
@@ -143,6 +151,18 @@ private fun createLineGradientBrush(
     )
 }
 
+/**
+ * Draws a multi-row lyrics line into the canvas.
+ * Handles row wrapping, padding, and applying the karaoke progress gradient.
+ *
+ * @param lineLayouts The pre-calculated layout of syllables, organized by rows.
+ * @param currentTimeMs The current playback time in milliseconds.
+ * @param color The base text color.
+ * @param blendMode The blend mode to use for drawing.
+ * @param isRtl Whether the layout direction is Right-to-Left.
+ * @param showDebugRectangles Whether to draw debug outlines around glyphs.
+ * @param atlasManager The SDF atlas manager for rendering text.
+ */
 fun DrawScope.drawLyricsLine(
     lineLayouts: List<List<SyllableLayout>>,
     currentTimeMs: Int,
@@ -193,6 +213,16 @@ fun DrawScope.drawLyricsLine(
     }
 }
 
+/**
+ * Draws text for a single row, handling word and character animations.
+ *
+ * @param rowLayouts The layouts for syllables in this row.
+ * @param drawColor The color to draw the text with.
+ * @param blendMode The blend mode to use.
+ * @param showDebugRectangles Whether to show debug bounds.
+ * @param currentTimeMs Current playback time.
+ * @param atlasManager SDF atlas manager for rendering.
+ */
 private fun DrawScope.drawRowText(
     rowLayouts: List<SyllableLayout>,
     drawColor: Color,
@@ -322,6 +352,17 @@ private fun DrawScope.drawRowText(
  * Each glyph is drawn at its position using atlas coordinates.
  * Uses glyph bearings (offsets) for proper baseline alignment.
  */
+/**
+ * Draws all glyphs from a NativeLayoutResult using the SdfAtlasManager.
+ * Each glyph is drawn at its position using atlas coordinates.
+ * Uses glyph bearings (offsets) for proper baseline alignment.
+ *
+ * @param layout The native layout result containing glyph positions and sizing.
+ * @param baseOffset The offset to apply to all glyphs (e.g., line position).
+ * @param color The color to tint the glyphs.
+ * @param atlasManager The manager containing the font texture atlas.
+ * @param shadow Optional shadow to apply to the glyphs.
+ */
 private fun DrawScope.drawGlyphsFromLayout(
     layout: NativeLayoutResult,
     baseOffset: Offset,
@@ -391,6 +432,30 @@ private fun DrawScope.drawGlyphsFromLayout(
     }
 }
 
+/**
+ * Renders a single karaoke line, capable of handling multi-row wrapping.
+ *
+ * This composable pre-calculates the text layout using [NativeTextEngine] and then
+ * renders the frames using an efficient Canvas drawing strategy. It handles:
+ * - Text measurement and line breaking
+ * - Syllable and character-level animations (bounce, rise, swell)
+ * - Karaoke fill gradient application
+ *
+ * @param line The karaoke line data.
+ * @param currentTimeProvider Provider for the current playback time.
+ * @param modifier Modifier for the layout.
+ * @param normalLineTextStyle Style for normal lines.
+ * @param accompanimentLineTextStyle Style for accompaniment lines.
+ * @param activeColor Color for the active (sung) portion of text.
+ * @param blendMode Blend mode for drawing.
+ * @param showDebugRectangles Debug flag for layout bounds.
+ * @param precalculatedLayouts Optional pre-calculated layouts (optimization).
+ * @param isDuoView Whether this line is part of a duet view.
+ * @param textMeasurer Text measurer for layout (default provided).
+ * @param fontResource Optional font resource for the native engine.
+ * @param sharedNativeEngine Optional shared native engine instance.
+ * @param sharedAtlasManager Optional shared atlas manager instance.
+ */
 @Composable
 fun KaraokeLineText(
     line: KaraokeLine,

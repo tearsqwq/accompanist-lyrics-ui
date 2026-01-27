@@ -20,6 +20,25 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mocharealm.gaze.capsule.ContinuousRoundedRectangle
 
+/**
+ * A container for a single line of lyrics, handling common interactions and animations.
+ * Features:
+ * - Scale animation on focus
+ * - Alpha animation on focus/active state
+ * - Blur effect
+ * - Click and long-press handling
+ *
+ * @param isFocused Whether the line is currently the active/focused line.
+ * @param isRightAligned Whether the line is right-aligned (e.g., for certain karaoke styles or RTL).
+ * @param onLineClicked Callback for click events.
+ * @param onLinePressed Callback for long-press events.
+ * @param blurRadius Provider for the blur radius (allows animation).
+ * @param modifier Modifier for the container.
+ * @param activeAlpha Alpha value when active/focused.
+ * @param inactiveAlpha Alpha value when inactive.
+ * @param blendMode Blend mode for drawing the content.
+ * @param content The composable content of the line (text).
+ */
 @Composable
 fun LyricsLineItem(
     isFocused: Boolean,

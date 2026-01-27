@@ -38,6 +38,17 @@ data class KaraokeBreathingDotsDefaults(
     val breathingDotsColor: Color = Color.White
 )
 
+/**
+ * Displays breathing dots animation during instrumental intros or interludes.
+ * The dots breathe/pulse and fade in/out to indicate progress during non-lyrical sections.
+ *
+ * @param alignment Alignment of the dots (Start or End).
+ * @param startTimeMs Start time of the interlude.
+ * @param endTimeMs End time of the interlude.
+ * @param currentTimeProvider Provider for current playback time.
+ * @param modifier Modifier for the layout.
+ * @param defaults Configuration defaults for size, count, etc.
+ */
 @Composable
 fun KaraokeBreathingDots(
     alignment: KaraokeAlignment,

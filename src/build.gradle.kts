@@ -26,7 +26,6 @@ val rustDir = layout.projectDirectory.dir("../text_engine")
 val rustLibName = "text_engine"
 
 kotlin {
-    5
     targets.all {
         compilations.all {
             compileTaskProvider.configure {

@@ -14,6 +14,20 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import java.awt.image.BufferedImage
 
+/**
+ * JVM/Desktop implementation of SDF atlas manager for text rendering.
+ * 
+ * Manages two atlas images:
+ * - **Normal atlas**: Pre-processed alpha for crisp text edges
+ * - **Shadow atlas**: Pre-processed alpha for smooth shadow/glow effects
+ * 
+ * SDF processing is performed in Rust for optimal performance:
+ * - A channel: normal text alpha
+ * - G channel: shadow alpha
+ *
+ * @param atlasWidth Width of the atlas texture in pixels
+ * @param atlasHeight Height of the atlas texture in pixels
+ */
 actual class SdfAtlasManager actual constructor(
     atlasWidth: Int,
     atlasHeight: Int
@@ -32,24 +46,40 @@ actual class SdfAtlasManager actual constructor(
     private var isDirty = true
     private var hasAnyData = false
     
-    // SDF rendering parameters for normal text
-    private val sdfThreshold = 0.7f  // Edge threshold (keep at 0.7 as requested)
-    private val sdfSmoothing = 0.02f  // Anti-aliasing width (smaller = sharper edges)
-    
     // Font loading is handled by the external NativeTextEngine
     // These methods are kept for API compatibility but delegate to the shared engine
+    /**
+     * Loads the primary font. No-op: use [NativeTextEngine.loadFont] instead.
+     */
     actual fun loadFont(fontBytes: ByteArray) {
         // No-op: Font loading should be done via the shared NativeTextEngine
     }
     
+    /**
+     * Loads a fallback font. No-op: use [NativeTextEngine.loadFallbackFont] instead.
+     */
     actual fun loadFallbackFont(fontBytes: ByteArray) {
         // No-op: Font loading should be done via the shared NativeTextEngine
     }
     
+    /**
+     * Clears fallback fonts. No-op: use [NativeTextEngine.clearFallbackFonts] instead.
+     */
     actual fun clearFallbackFonts() {
         // No-op: Font loading should be done via the shared NativeTextEngine
     }
     
+    /**
+     * Updates the atlas textures with pending glyph uploads from the native engine.
+     * 
+     * The upload data contains pre-processed alpha values from Rust:
+     * - R channel: 255 (white)
+     * - G channel: shadow alpha
+     * - B channel: 255 (white)
+     * - A channel: normal text alpha
+     *
+     * @param uploads List of glyph regions to upload
+     */
     actual fun updateAtlas(uploads: List<GlyphUpload>) {
         if (uploads.isEmpty()) return
         
@@ -110,11 +140,6 @@ actual class SdfAtlasManager actual constructor(
         isDirty = true
     }
     
-    private fun smoothstep(edge0: Float, edge1: Float, x: Float): Float {
-        val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0f, 1f)
-        return t * t * (3f - 2f * t)
-    }
-    
     private fun ensureImageBitmaps() {
         if (isDirty || atlasImageBitmap == null || shadowAtlasImageBitmap == null) {
             atlasImageBitmap = atlasImage.toComposeImageBitmap()
@@ -123,6 +148,15 @@ actual class SdfAtlasManager actual constructor(
         }
     }
     
+    /**
+     * Draws a glyph from the atlas to the canvas with optional shadow.
+     *
+     * @param atlasRect Source rectangle in the atlas
+     * @param destOffset Destination position on canvas
+     * @param destSize Destination size for scaling
+     * @param color Text color
+     * @param shadow Optional shadow configuration
+     */
     actual fun DrawScope.drawGlyph(
         atlasRect: Rect,
         destOffset: Offset,
@@ -169,8 +203,15 @@ actual class SdfAtlasManager actual constructor(
         )
     }
     
+    /**
+     * Checks if the atlas is ready for rendering.
+     * @return true if the atlas has been initialized with texture data
+     */
     actual fun isReady(): Boolean = hasAnyData
     
+    /**
+     * Releases all resources associated with the atlas.
+     */
     actual fun destroy() {
         atlasImageBitmap = null
         shadowAtlasImageBitmap = null

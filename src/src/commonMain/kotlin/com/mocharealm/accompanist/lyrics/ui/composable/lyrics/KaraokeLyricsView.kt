@@ -69,6 +69,33 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.FontResource
 
+/**
+ * A comprehensive lyrics view that supports Karaoke and Synced lyrics with advanced rendering.
+ *
+ * This composable handles:
+ * - Scrolling and auto-scrolling to the current line
+ * - Rendering karaoke lines with syllable-level timing and animations
+ * - Rendering synced lines
+ * - Displaying breathing dots during instrumental interludes
+ * - Determining active and accompaniment lines
+ * - Orchestrating layout pre-calculation using [NativeTextEngine]
+ *
+ * @param listState The scroll state for the lazy list.
+ * @param lyrics The lyrics data to display.
+ * @param currentPosition A lambda returning the current playback position in milliseconds.
+ * @param onLineClicked Callback when a line is clicked (seek to position).
+ * @param onLinePressed Callback when a line is long-pressed (share/menu).
+ * @param modifier The modifier to apply to the layout.
+ * @param normalLineTextStyle The style for normal text lines.
+ * @param accompanimentLineTextStyle The style for accompaniment/background vocals lines.
+ * @param textColor The primary text color.
+ * @param breathingDotsDefaults Styling defaults for the breathing dots.
+ * @param blendMode The blend mode used for rendering text (e.g., [BlendMode.Plus] for glowing effects).
+ * @param useBlurEffect Whether to apply blur effect to non-active lines.
+ * @param offset The vertical padding/offset at the start and end of the list.
+ * @param showDebugRectangles Debug flag to draw bounding boxes around glyphs.
+ * @param fontResource Optional CMP font resource to load into the native text engine.
+ */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun KaraokeLyricsView(
@@ -101,7 +128,9 @@ fun KaraokeLyricsView(
     useBlurEffect: Boolean = true,
     offset: Dp = 32.dp,
     showDebugRectangles: Boolean = false,
-    fontResource: FontResource? = null // CMP font resource for NativeTextEngine
+    fontResource: FontResource? = null,
+    sharedAtlasManager: SdfAtlasManager = rememberSdfAtlasManager(2048, 2048),
+    sharedNativeEngine: NativeTextEngine? = null
 ) {
     val density = LocalDensity.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
@@ -115,11 +144,11 @@ fun KaraokeLyricsView(
         remember(stableOffset) { with(density) { stableOffset.toPx().fastRoundToInt() } }
     val stableBlendMode = remember(blendMode) { blendMode }
 
-     val textMeasurer = rememberTextMeasurer()
+    val textMeasurer = rememberTextMeasurer()
     val layoutCache = remember { mutableStateMapOf<Int, List<SyllableLayout>>() }
     
     // Instantiate NativeTextEngine for layout pre-calculation
-    val nativeEngine = remember(stableNormalTextStyle.fontFamily, platformContext, fontResourceBytes) { 
+    val nativeEngine = sharedNativeEngine ?: remember(stableNormalTextStyle.fontFamily, platformContext, fontResourceBytes) { 
         NativeTextEngine().apply {
             init(2048, 2048)
             // Prefer fontResource bytes if provided, otherwise fall back to FontFamily
@@ -140,9 +169,6 @@ fun KaraokeLyricsView(
             }
         }
     }
-    
-    // Shared SdfAtlasManager for all KaraokeLineText components
-    val sharedAtlasManager = rememberSdfAtlasManager(2048, 2048)
     
     // Process pending glyph uploads from native engine
     if (nativeEngine.hasPendingUploads()) {

@@ -13,6 +13,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mocharealm.accompanist.lyrics.core.model.synced.SyncedLine
 
+/**
+ * Displays a simple lyrics line that is synced to a specific time but has no internal arithmetic/karaoke animation.
+ * Typically used for non-karaoke synced lyrics (LRC format).
+ *
+ * @param line The synced line data.
+ * @param isLineRtl Whether the line content is Right-to-Left.
+ * @param textStyle The text style for the content.
+ * @param textColor The color for the text.
+ * @param modifier Modifier for the layout.
+ */
 @Composable
 fun SyncedLineText(
     line: SyncedLine,
