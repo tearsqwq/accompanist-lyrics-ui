@@ -5,7 +5,6 @@
 [![Telegram](https://img.shields.io/badge/Telegram-Community-blue?logo=telegram)](https://t.me/mocha_pot)
 
 ## 📦 Repository
-
 Accompanist released a group of artifacts, including: 
 
 - [`lyrics-core`](https://github.com/6xingyv/Accompanist-Lyrics) - Parsing lyrics file, holding data and exporting to other formats.
