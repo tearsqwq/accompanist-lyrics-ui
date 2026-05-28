@@ -1,1 +1,1 @@
-.txt) file for details.
+https://club.vip.qq.com/openKuikly/vas_gxh_role_bubble?qqmc_config=vas_kuikly_config&open_kuikly_info=%7B%22bundle_name%22%3A%22vas_gxh_role_bubble%22%7D&page_name=vas_gxh_role_bubble_plaza&kr_turbo_display=1&activity_animate_type=1&bottom_nav_bar_immersive=1&from=share 鸟都不鸟你
